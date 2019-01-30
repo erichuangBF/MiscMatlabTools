@@ -1,5 +1,5 @@
 % This function plots MPC prediction quality for each result group over a 4 hour prediction horizon
-function plotMpcPredictQuality(resultsMatrix, lossMatrix, percentiles, saveDir)
+function plotMpcPredictQualityOriginal(resultsMatrix, lossMatrix, percentiles, saveDir)
 % ehuang
 % ARGUMENTS
 %   resultsMatrix: matrix of vClinic result structs loaded by 
@@ -40,9 +40,13 @@ function plotMpcPredictQuality(resultsMatrix, lossMatrix, percentiles, saveDir)
     figure('Name',"MPC Prediction Quality");
     
     colors='bkrgycm';
+    plots = [];
     resultNames = fieldnames(resultsMatrix);
 
     for option = 1:numAlternatives
+        % get array of result names
+        
+
         eval(strcat("resultStruct = resultsMatrix.", resultNames(option), ";"));
         
         numSubjects = length(resultStruct.results);
@@ -59,59 +63,48 @@ function plotMpcPredictQuality(resultsMatrix, lossMatrix, percentiles, saveDir)
 
             egv = resultStruct.results(subject).cgm.egvsMgDl.Data;
             egv = egv(1:3:end); % egv is available every 5 minutes, but predictions are available every 15 minutes; therefore you should skip some egv values to be able to produce the correct ratio.
-
-%             sigma = zeros(horizon,1); 
-%             mu = zeros(horizon,1); 
-%             for horizonIndex = 1:horizon
-%                 predQuality = egv(horizonIndex+1:end)./pred(1:end-horizonIndex,horizonIndex);
-%                 % sigma robust cov estimate of multivariate data (contained in 'predQuality')
-%                 % mu is estimate of robust Minimum Covariance Determinant Mean
-%                 [sigma(horizonIndex), mu(horizonIndex)] = robustcov(log(predQuality));
-%             end
-% 
-%             MPCpredictionsMuStar = exp(mu);
-%             MPCpredictionsSigmaStar = exp(sigma);
-% 
-%             mpcQuality = zeros(1, length(MPCpredictionsSigmaStar));
-% 
-%             for predictionInterval = 1:length(MPCpredictionsMuStar)
-%                 mpcQuality(predictionInterval) = MPCpredictionsMuStar(predictionInterval)/MPCpredictionsSigmaStar(predictionInterval);
-%             end
-% 
-%             predictionQualityMatrix(subject, :) = mpcQuality;
-
-            sigmaStar = zeros(horizon,1); 
-            muStar = zeros(horizon,1); 
+            sigma = zeros(horizon,1); 
+            mu = zeros(horizon,1); 
 
             for horizonIndex = 1:horizon
                 predQuality = egv(horizonIndex+1:end)./pred(1:end-horizonIndex,horizonIndex);
-                % sigma robust cov estimate of multivariate data (contained in 'predQuality')
-                % mu is estimate of robust Minimum Covariance Determinant Mean
-                muStar(horizonIndex) = exp(nanmean(log(predQuality)));
-                sigmaStar(horizonIndex) = exp(nanstd(log(predQuality)));
+                [sigma(horizonIndex), mu(horizonIndex)] = robustcov(log(predQuality)); % returns [variance, mean]
+                % Lane: 
+                % Here's how I use it: [s m]=robustcov(log(x)); 
+                % gm=exp(m); gs=exp(sqrt(s)) this is for the univariate case; 
+                % when x is multivariate then s is a covariance matrix and so 
+                % the variances are along the diagonal gs=exp(sqrt(diag(s)))
             end
 
+            MPCpredictionsMuStar = exp(mu);
+            MPCpredictionsSigmaStar = exp(sigma);
 
-            mpcQualityReconstructed = prctile(predictionQualityMatrix,percentiles,1)';
-            x = (1:16)/4;
-            semilogy(x,mpcQualityReconstructed(:,1),strcat(colors(option),'-.'),...
-                     x,mpcQualityReconstructed(:,2),strcat(colors(option),'-'),...
-                     x,mpcQualityReconstructed(:,3),strcat(colors(option),'--'));
-            hold on
-           
+            mpcQuality = zeros(1, length(MPCpredictionsSigmaStar));
+
+            for predictionInterval = 1:length(MPCpredictionsMuStar)
+                mpcQuality(predictionInterval) = MPCpredictionsMuStar(predictionInterval)/MPCpredictionsSigmaStar(predictionInterval);
+            end
+
+            predictionQualityMatrix(subject, :) = mpcQuality;
+
         end
 
-
+        y = prctile(predictionQualityMatrix,percentiles,1)';
+        x = (1:16)/4;
+        tempPlot = semilogy(x,y(:,1),strcat(colors(option),'-.'),...
+                 x,y(:,2),strcat(colors(option),'-'),...
+                 x,y(:,3),strcat(colors(option),'--'));
+        hold on
+        plots = [plots tempPlot];
     end
-    
 
-    ylabel("\mu*/(\sigma*)^z");
+    ylabel("MPC Prediction Quality (estimated/predicted)");
     xlabel("prediction horizon");
     yticks([1/2 2/3 1 5/4])
     semilogy([0 4],[1 1],'k')
     axis([0 4 1/2 5/4])
     yticklabels({'1/2' '2/3' '1' '5/4'})
-    title("MPC Prediction Quality \mu*/(\sigma*)^z for z=5%, 50%, and 95%");
+    title("MPC Prediction Quality for z=5%, 50%, and 95%");
 
     % custom legend
     h = zeros(numAlternatives, 1);

@@ -1,5 +1,5 @@
 % This function plots the mean MPC loss for each option over time
-function plotMeanMpcLoss(optionNames, lossMatrix, saveDir)
+function plotGeoMeanMpcLoss(optionNames, lossMatrix, saveDir)
 % ehuang
 % ARGUMENTS
 %   lossMatrix: a 3D matrix of loss for each result/option, subject, time
@@ -45,30 +45,30 @@ function plotMeanMpcLoss(optionNames, lossMatrix, saveDir)
         end
     end
     
-    figure('Name','Mean Loss');
+    figure('Name','Geo Mean Loss');
     
     meanLossArray = zeros(size(lossMatrix, 2), size(lossMatrix, 1));
     
     for resultSet = 1:size(lossMatrix, 1)
-        meanLoss = mean(lossMatrix(resultSet, :, :),3);
+        meanLoss = geomean(lossMatrix(resultSet, :, :),3);
         meanLossArray(:, resultSet) = meanLoss;
     end
     
-    lossVectorTS = timeseries(meanLossArray,'Name','Mean Loss Across 27 Subjects over 180 Days');
+    lossVectorTS = timeseries(meanLossArray,'Name','Geo Mean Loss Across 27 Subjects over 180 Days');
     lossVectorTS = setuniformtime(lossVectorTS,'Interval', 1, 'StartTime', 1);
     lossVectorTS.TimeInfo.Units = 'weeks';
     plot(lossVectorTS);
     legend(optionNames);
-    title('Mean Loss');
+    title('Geo Mean Loss');
     drawnow
 
     if exist('saveDir','var')
         if ~endsWith(saveDir, '/')
             saveDir = strcat(saveDir, '/', datestr(now,'yyyymmddHHMM'), ...
-                '_meanMpcLoss.png');
+                '_geoMeanMpcLoss.png');
         else
             saveDir = strcat(saveDir, datestr(now,'yyyymmddHHMM'), ...
-                '_meanMpcLoss.png');
+                '_geoMeanMpcLoss.png');
         end
         saveas(gcf,saveDir);
         disp(strcat('      * saved to', saveDir));

@@ -1,8 +1,6 @@
-% ehuang
+% Returns a 2D matrix of BR, CR, and ISF values for each subject where each row represents a subject
 function brCrIsf = getBrCrIsf(resultsMatrix)
-% FUNCTION
-% Returns a 2D matrix of BR, CR, and ISF values for each subject where each 
-%     row represents a subject
+% ehuang
 % Fails if these values are inconsistent across results
 % 
 % ARGUMENTS
@@ -52,7 +50,7 @@ function brCrIsf = getBrCrIsf(resultsMatrix)
     if numResultStructs > 1
        % check if there are discrepancies
         for resultNo = 2:numResultStructs
-            eval(strcat("thisResult = resultsMatrix.", resultNames(resultNo), ","));
+            eval(strcat("thisResult = resultsMatrix.", resultNames(resultNo), ";"));
             for subjectNo = 1:numSubjects
                 thisSubject = thisResult.results(subjectNo).subject;
                 br = thisSubject.totalDailyBasalRateUnits.programmed;

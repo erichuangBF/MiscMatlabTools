@@ -1,8 +1,6 @@
-% ehuang
+% This function returns 3D matrix of calculated loss for every result struct
 function loss = mpcPredictionLoss(sampleIntervalDays, resultsMatrix)
-% FUNCTION
-% Returns 3D matrix of calculated loss for every result struct
-% 
+% ehuang 
 % ARGUMENTS
 %   sampleIntervalDays: number of days to use as sample interval
 %   resultsMatrix: matrix of vClinic result structs loaded by 

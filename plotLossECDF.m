@@ -1,5 +1,5 @@
-% This function plots a histogram illustrating loss across subjects
-function plotMeanLossHistogram(lossMatrix, optionNames, saveDir)
+% This function plots a the ECDF of each subject
+function plotLossECDF(lossMatrix, optionNames, saveDir)
 % ehuang
 % 
 % ARGUMENTS
@@ -29,36 +29,35 @@ function plotMeanLossHistogram(lossMatrix, optionNames, saveDir)
 %  %%% Calculating Loss
 %     lossMatrix = mpcPredictionLoss(7, resultsMatrix);
 % 
-%  %%% Plotting Loss Histogram
-%     plotMeanLossHistogram(lossMatrix, optionNames, "../Plots/");
+%  %%% Plotting Loss ECDF
+%     plotLossECDF(lossMatrix, optionNames, "../Plots/");
 %%
-    figure('Name','Mean Loss vs Subject');
-    
-    meanLossOfEachAltBySubject = zeros(size(lossMatrix, 3), size(lossMatrix, 1));
+    figure('Name','ECDF of Subject Loss');
+    colors='brgykcm';
 
     for alt = 1:size(lossMatrix, 1)
-        thisLossMatrix = lossMatrix(alt, :, :); %[alt, time, subject]
-        % collapse all the loss over entire time duration for each subject into one mean value
-        eval(strcat("meanLossOfEachAltBySubject(:, ", num2str(alt), ") = nanmean(thisLossMatrix);")); 
+        % collapse loss matrix
+        tempLoss = nanmean(squeeze(lossMatrix(alt, :, :)), 1);
+       
+        [f, x] = ecdf(permute(tempLoss, [3, 2, 1]));
+        
+        plot(x,f,strcat(colors(alt),'-'));
+        hold on;
     end
 
-    bar(meanLossOfEachAltBySubject, 'grouped');
-    hold on;
-
-    ylabel("loss");
-    xlabel("subject");
-    title(strcat("Mean Loss vs Subject"));
+    ylabel("% of Subjects");
+    xlabel("Loss");
+    title(strcat("ECDF of Subject Loss"));
     legend(optionNames, 'Location','northwest');
-    axis([0 size(lossMatrix, 3)+1 0 max(max(meanLossOfEachAltBySubject))*1.1])
     drawnow;
 
     if exist('saveDir','var')
         if ~endsWith(saveDir, '/')
             saveDir = strcat(saveDir, '/', datestr(now,'yyyymmddHHMM'), ...
-                '_meanLossHistogram.png');
+                '_meanLossECDF.png');
         else
             saveDir = strcat(saveDir, datestr(now,'yyyymmddHHMM'), ...
-                '_meanLossHistogram.png');
+                '_meanLossECDF.png');
         end
         saveas(gcf,saveDir);
         disp(strcat('      * saved to', saveDir));

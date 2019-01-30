@@ -1,8 +1,6 @@
-% ehuang
+% This function loads a result struct from a vClinic(.mat file) file
 function returnedResult = loadVClinicResultsStructFromFile(resultPath)
-% FUNCTION
-% Loads a result struct from a vClinic(.mat file) file
-%
+% ehuang
 % ARGUMENTS
 % resultPath: file path containing vclinic result mat file
 % 

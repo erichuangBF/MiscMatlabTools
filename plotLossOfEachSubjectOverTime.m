@@ -1,8 +1,6 @@
-% ehuang
+% This function creates loss plots (containing n curves) for every subject
 function plotLossOfEachSubjectOverTime(lossMatrix, numPlotsPerRow, optionNames, brCrIsf, saveDir)
-% FUNCTION
-%    This function creates loss plots (containing n curves) for every subject
-% 
+% ehuang
 % ARGUMENTS
 %   lossMatrix: a 3D matrix of loss for each result/option, subject, time
 %   numPlotsPerRow: number of plots to display in each row
